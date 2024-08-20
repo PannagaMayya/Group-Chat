@@ -1,0 +1,35 @@
+/* src/components/Header.css */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: rgb(158, 191, 216);
+  border-bottom: 1px solid #ddd;
+  height: 10vh;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-right {
+  display: flex;
+  gap: 10px;
+}
+
+.header-button {
+  background-color: initial;
+  background-image: linear-gradient(-180deg, #ff7e31, #e25b3d);
+  color: #ffffff;
+  border: 1px solid #015968;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.header-button:hover {
+  box-shadow: rgba(253, 76, 0, 0.5) 0 3px 8px;
+}
