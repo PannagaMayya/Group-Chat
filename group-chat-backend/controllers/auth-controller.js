@@ -11,7 +11,7 @@ export const registerUser = async (req, res, next) => {
       password: hash,
     });
     await newUser.save();
-    res.status(200).send("User created successfully");
+    res.status(200).json({ id: newUser._id });
   } catch (err) {
     next(err);
   }
@@ -19,7 +19,7 @@ export const registerUser = async (req, res, next) => {
 
 export const loginUser = async (req, res, next) => {
   try {
-    const user = await UserSchema.findOne({ username: req.body.username });
+    const user = await User.findOne({ username: req.body.username });
 
     if (!user) return next(createError(404, "User Not found"));
     const isPasswordCorrect = await bcrypt.compare(
@@ -28,7 +28,10 @@ export const loginUser = async (req, res, next) => {
     );
     if (!isPasswordCorrect)
       return next(createError(400, "Password is incorrect"));
-    const token = jwt.sign({ id: user._id }, process.env.JWT);
+    const token = jwt.sign(
+      { id: user._id, isAdmin: user.isAdmin },
+      process.env.JWT
+    );
 
     const { password, isAdmin, ...otherUserDetails } = user._doc;
     res

@@ -1,6 +1,6 @@
 import Group from "../models/Groups.js";
 import { createError } from "../utils/error.js";
-
+import { Message, Conversation } from "../models/Messages.js";
 const sendMessage = async (req, res, next) => {
   try {
     const group = await Group.findById(req.body.groupId);
@@ -36,7 +36,7 @@ const listConversations = async (req, res, next) => {
 
 const listMessages = async (req, res, next) => {
   try {
-    const messages = await Message.find({ group: req.id })
+    const messages = await Message.find({ group: req.params.id })
       .populate("sender", "name")
       .sort({ timestamp: -1 })
       .limit(req.query.limit)

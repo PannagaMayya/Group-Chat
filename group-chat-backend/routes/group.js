@@ -5,6 +5,7 @@ import {
   getGroupUsers,
   getAllUsers,
 } from "../controllers/group-controller.js";
+
 const router = express.Router();
 
 router.get("/", getAllUsers);
