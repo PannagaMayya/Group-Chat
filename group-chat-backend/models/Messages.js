@@ -9,7 +9,8 @@ const messageSchema = new mongoose.Schema({
 const Message = mongoose.model("Message", messageSchema);
 
 const conversationSchema = new mongoose.Schema({
-  participants: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  group: { type: mongoose.Schema.Types.ObjectId, ref: "Group" },
   lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: "Message" },
   lastMessageTimestamp: { type: Date },
 });

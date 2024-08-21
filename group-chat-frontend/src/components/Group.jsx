@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   FormControl,
@@ -10,6 +10,7 @@ import {
   TextField,
   Autocomplete,
 } from "@mui/material";
+import axiosInstance from "../axiosInstance";
 const style = {
   position: "absolute",
   top: "50%",
@@ -22,23 +23,60 @@ const style = {
   p: 4,
 };
 
-const top100Films = [
-  { title: "The Shawshank Redemption", year: 1994 },
-  { title: "The Godfather", year: 1972 },
-  { title: "The Godfather: Part II", year: 1974 },
-  { title: "The Dark Knight", year: 2008 },
-  { title: "12 Angry Men", year: 1957 },
-  { title: "Schindler's List", year: 1993 },
-  { title: "Pulp Fiction", year: 1994 },
-  {
-    title: "The Lord of the Rings: The Return of the King",
-    year: 2003,
-  },
-];
+const createGroup = async (name) => {
+  try {
+    let response = await axiosInstance.post("/groups/new", {
+      name: name,
+    });
+    console.log(response.data);
+    return response?.data?.id;
+  } catch (err) {
+    console.log(err);
+    return err;
+  }
+};
 
-function Group({ handleClose, open }) {
-  const [name, setName] = useState("");
-  const [users, setUsers] = useState([]);
+const handleGroup = async (newData, data) => {
+  try {
+    let id = (data && data?.id) || (await createGroup(newData.name));
+
+    if (typeof id == "string") {
+      let response = await axiosInstance.post(`/groups/${id}`, {
+        updateData: {
+          name: newData.name,
+          users: newData?.users?.map((e) => e.id),
+        },
+      });
+      console.log(response.data);
+    }
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+function Group({ handleClose, open, data }) {
+  const [name, setName] = useState((data && data.name) || "");
+  const [users, setUsers] = useState((data && data.users) || []);
+  const [allUsers, setAllUsers] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        let response = await axiosInstance.get("/groups");
+        console.log(response.data);
+        setAllUsers(() =>
+          response?.data?.map((e) => ({
+            username: e.username,
+            id: e._id,
+          }))
+        );
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchData();
+  }, []);
   return (
     <div>
       <Modal
@@ -52,10 +90,13 @@ function Group({ handleClose, open }) {
           component="form"
           onSubmit={(e) => {
             e.preventDefault();
-            SubmitJob(name, duration);
+            if (users.length != 0) {
+              handleGroup({ name, users }, data);
+            }
+            console.log(e);
             handleClose();
             setName("");
-            setPassword("");
+            setUsers([]);
           }}
         >
           <Typography id="modal-modal-title" variant="h6" component="h2">
@@ -83,10 +124,14 @@ function Group({ handleClose, open }) {
             <Autocomplete
               multiple
               id="tags-outlined"
-              options={top100Films}
-              getOptionLabel={(option) => option.title}
-              defaultValue={[]}
+              options={allUsers}
+              getOptionLabel={(option) => option?.username}
+              value={users}
+              onChange={(e, newVal) => {
+                setUsers(newVal);
+              }}
               filterSelectedOptions
+              isOptionEqualToValue={(option, value) => option.id === value.id}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -99,7 +144,12 @@ function Group({ handleClose, open }) {
           </FormControl>
           <br />
           <br />
-          <Button type="submit" variant="contained" sx={{ mt: 3, mb: 2 }}>
+          <Button
+            type="submit"
+            variant="contained"
+            sx={{ mt: 3, mb: 2 }}
+            disabled={users.length == 0}
+          >
             Done
           </Button>
         </Box>

@@ -1,6 +1,7 @@
 import Group from "../models/Groups.js";
 import { createError } from "../utils/error.js";
 import User from "../models/Users.js";
+import { Conversation } from "../models/Messages.js";
 
 const getAllUsers = async (req, res, next) => {
   try {
@@ -17,6 +18,13 @@ const createGroup = async (req, res, next) => {
       name: req.body.name,
     });
     await newGrp.save();
+
+    const newConversation = new Conversation({
+      group: newGrp._id,
+      lastMessageTimestamp: Date.now(),
+    });
+    await newConversation.save();
+
     res.status(200).json({ id: newGrp._id });
   } catch (err) {
     next(err);

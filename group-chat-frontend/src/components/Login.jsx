@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -11,15 +11,35 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import axiosInstance from "../axiosInstance";
+import axios from "axios";
 
-function Login() {
-  const handleSubmit = (event) => {
+function Login({ handleLogin }) {
+  const [error, setError] = useState("");
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     console.log({
       username: data.get("username"),
       password: data.get("password"),
     });
+    try {
+      const response = await axiosInstance.post(
+        "/auth/login",
+        {
+          username: data.get("username"),
+          password: data.get("password"),
+        },
+        {
+          withCredentials: true,
+        }
+      );
+      console.log("Login successful:", response.data);
+      handleLogin();
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError("Login failed. Please check your credentials.");
+    }
   };
   const defaultTheme = createTheme();
   return (
@@ -76,6 +96,7 @@ function Login() {
             >
               Login
             </Button>
+            {error && <p style={{ color: "red" }}>{error}</p>}
           </Box>
         </Box>
       </Container>

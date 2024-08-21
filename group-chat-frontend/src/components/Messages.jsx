@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   MinChatUiProvider,
   MainContainer,
@@ -9,8 +9,10 @@ import ConversationsList from "./ConversationsList";
 import Header from "./Header";
 import Register from "./Register";
 import Group from "./Group";
+import axiosInstance from "../axiosInstance";
+import "../style/messages.css";
 
-const messages = [
+const messagesExample = [
   { user: { id: "12", name: "John Doe" }, text: "Hello!" },
   { user: { id: "13", name: "You" }, text: "Hi, John!" },
 
@@ -18,7 +20,7 @@ const messages = [
   { user: { id: "12", name: "You" }, text: "Perfect, see you then!" },
 ];
 
-const conversations = [
+const conversationsExample = [
   {
     id: "1",
     title: "John Doe",
@@ -46,7 +48,62 @@ const conversations = [
 ];
 const initState = { group: false, user: false };
 function Messages() {
+  const [conversations, setConversations] = useState(conversationsExample);
+  const [messages, setMessages] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [open, setOpen] = useState(initState);
+  const [group, setGroup] = useState(null);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        let response = await axiosInstance.get(
+          "/messages?id=66c4f57243e559b63a3b670c"
+        );
+        console.log(response.data);
+        setConversations(
+          response.data?.map((e) => ({
+            id: e.group?._id,
+            title: e.group?.name,
+            lastMessage: {
+              user: { id: e.sender?._id, name: e.sender?.username },
+              id: e.lastMessage?._id,
+              text: e.lastMessage?.content,
+              createdAt: new Date(e.lastMessageTimestamp),
+            },
+          }))
+        );
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+  useEffect(() => {
+    const fetchMessagesData = async () => {
+      try {
+        let response = await axiosInstance.get(`/messages/${group}`);
+        console.log(response.data);
+        setMessages(
+          response.data?.map((e) => ({
+            user: {
+              id: e.sender?._id,
+              name: e.sender?.username,
+            },
+            createdAt: new Date(e.timestamp),
+            text: e.content,
+          }))
+        );
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    group && fetchMessagesData();
+  }, [group]);
+
   const handleOpen = (key) => {
     setOpen({ ...initState, [key]: true });
   };
@@ -61,18 +118,37 @@ function Messages() {
     console.log("group clicked");
     handleOpen("group");
   };
+  const sendMessage = async (text) => {
+    try {
+      let response = await axiosInstance.post("/messages/send", {
+        groupId: group,
+        senderId: "66c4f57243e559b63a3b670c",
+        content: text,
+      });
+      console.log(response.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  if (loading) return <p>Loading...</p>;
+
   return (
-    <div>
+    <div className="message-container">
       {" "}
       <Header onUsers={onUsers} onCreateGroup={onCreateGroup} />
       <Register handleClose={handleClose} open={open.user} />
       <Group handleClose={handleClose} open={open.group} />
-      <MinChatUiProvider theme="#6ea9d7">
-        <MainContainer style={{ height: "85vh", display: "flex" }}>
-          <ConversationsList conversations={conversations} />
-          <Conversation messages={messages} />
-        </MainContainer>
-      </MinChatUiProvider>
+      <div style={{ height: "85vh" }}>
+        <MinChatUiProvider theme="#6ea9d7">
+          <MainContainer style={{ display: "flex" }}>
+            <ConversationsList
+              conversations={conversations}
+              setGroup={setGroup}
+            />
+            <Conversation messages={messages} sendMessage={sendMessage} />
+          </MainContainer>
+        </MinChatUiProvider>
+      </div>
     </div>
   );
 }

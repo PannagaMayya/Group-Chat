@@ -28,7 +28,13 @@ function App() {
         <Routes>
           <Route
             path="/login"
-            element={!isAuthenticated ? <Login /> : <Navigate to="/messages" />}
+            element={
+              !isAuthenticated ? (
+                <Login handleLogin={handleLogin} />
+              ) : (
+                <Navigate to="/messages" />
+              )
+            }
           />
           <Route
             path="/register"
